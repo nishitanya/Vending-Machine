@@ -1,0 +1,72 @@
+`timescale 1ns / 1ps
+
+module vending_machine_tb;
+    reg clk;
+    reg rst;
+    reg [1:0] money;
+    wire [1:0] product_select;
+    wire [1:0] change;
+    wire product_dispensed;
+
+    // Instantiate the vending machine
+    vending_machine uut (
+        .clk(clk),
+        .rst(rst),
+        .money(money),
+        .product_select(product_select),
+        .change(change),
+        .product_dispensed(product_dispensed)
+    );
+
+    // Clock generation
+    always #5 clk = ~clk; // 10ns period (50MHz clock)
+
+    initial begin
+        // Initialize inputs
+        clk = 0;
+        rst = 1;
+        money = 2'b00;
+        
+        // Dump waveforms for viewing in GTKWave
+        $dumpfile("vending_machine.vcd");
+        $dumpvars(0, vending_machine_tb);
+
+        // Reset the machine
+        #10 rst = 0;
+
+        // Insert Rs 5
+        #10 money = 2'b01;
+        #10 money = 2'b00; // Wait
+
+        // Insert Rs 10 (total Rs 15, should dispense Rs 15 product)
+        #10 money = 2'b10;
+        #10 money = 2'b00; // Wait
+
+        // Insert Rs 20 directly (should dispense Rs 15 product with Rs 5 change)
+        #10 money = 2'b11;
+        #10 money = 2'b00; // Wait
+
+        // Insert Rs 10, then another Rs 10 (should dispense Rs 15 product with Rs 5 change)
+        #10 money = 2'b10;
+        #10 money = 2'b10;
+        #10 money = 2'b00; // Wait
+
+        // Insert Rs 5, then Rs 10 (should dispense Rs 10 product)
+        #10 money = 2'b01;
+        #10 money = 2'b10;
+        #10 money = 2'b00; // Wait
+
+        // Insert Rs 10, then Rs 5 (should dispense Rs 15 product)
+        #10 money = 2'b10;
+        #10 money = 2'b01;
+        #10 money = 2'b00; // Wait
+
+        // Insert Rs 10, then Rs 20 (should dispense Rs 15 product with Rs 10 change)
+        #10 money = 2'b10;
+        #10 money = 2'b11;
+        #10 money = 2'b00; // Wait
+
+        // Finish simulation
+        #50 $finish;
+    end
+endmodule
